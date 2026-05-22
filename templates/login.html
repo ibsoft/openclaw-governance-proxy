@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block content %}
+<section class="login-shell">
+  <div class="login-hero">
+    <div class="brand-xl"><i class="fa-solid fa-shield-halved"></i> OpenClaw</div>
+    <h1>Governed AI traffic, locally controlled.</h1>
+    <p>Secure control plane for rules, agents, audit trails, and intercepted proxy events.</p>
+    <div class="login-pills">
+      <span><i class="fa-solid fa-lock"></i> CSRF protected</span>
+      <span><i class="fa-solid fa-database"></i> SQLite source of truth</span>
+      <span><i class="fa-solid fa-network-wired"></i> mitmproxy data plane</span>
+    </div>
+  </div>
+  <div class="login-panel">
+    <div class="login-card-title">
+      <span class="brand-mark"><i class="fa-solid fa-key"></i></span>
+      <div><strong>Operator Login</strong><small>Use your local admin account</small></div>
+    </div>
+    <form method="post">{{ form.hidden_tag() }}
+      <div class="mb-3">{{ form.username.label(class="form-label") }}{{ form.username(class="form-control form-control-lg", autocomplete="username") }}</div>
+      <div class="mb-4">{{ form.password.label(class="form-label") }}{{ form.password(class="form-control form-control-lg", autocomplete="current-password") }}</div>
+      <button class="btn btn-primary btn-lg w-100">Login</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

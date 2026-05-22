@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenClaw Governance HTTPS Proxy
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/openclaw-governance-proxy
+EnvironmentFile=/opt/openclaw-governance-proxy/.env
+ExecStart=/opt/openclaw-governance-proxy/.venv/bin/mitmdump --listen-host 127.0.0.1 --listen-port 8888 -s /opt/openclaw-governance-proxy/openclaw_governance_proxy/addon.py
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ReadWritePaths=/opt/openclaw-governance-proxy/logs /opt/openclaw-governance-proxy/config /opt/openclaw-governance-proxy/data
+
+[Install]
+WantedBy=multi-user.target

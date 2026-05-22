@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<h1>{{ title }}</h1><form method="post">{{ form.hidden_tag() }}
+{% for field in [form.id,form.name,form.description,form.severity,form.action,form.direction,form.match_type,form.scope,form.agent_id,form.patterns,form.domains,form.content_types,form.tags,form.notes] %}
+<div class="mb-3">{{ field.label(class="form-label") }}{{ field(class="form-control") }}</div>{% endfor %}
+<div class="form-check mb-3">{{ form.enabled(class="form-check-input") }}{{ form.enabled.label(class="form-check-label") }}</div><button class="btn btn-primary">Save</button></form>
+{% endblock %}

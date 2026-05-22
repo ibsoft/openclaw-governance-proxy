@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Policy Control</p>
+    <h1>Rules</h1>
+  </div>
+  <div class="toolbar">
+    <a class="btn btn-primary" href="{{ url_for('rule_new') }}"><i class="fa-solid fa-plus"></i> Create</a>
+    <form method="post" action="{{ url_for('rules_export') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-info" data-confirm><i class="fa-solid fa-file-export"></i> Export</button>
+    </form>
+    <form method="post" action="{{ url_for('rules_reload') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-warning" data-confirm><i class="fa-solid fa-rotate"></i> Reload</button>
+    </form>
+  </div>
+</div>
+<form class="filter-bar">
+  <input name="search" class="form-control" placeholder="Search ID, name, or description" value="{{ request.args.get('search','') }}">
+  <button class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
+</form>
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table table-sm ops-table">
+      <thead><tr><th>ID</th><th>Name</th><th>Enabled</th><th>Severity</th><th>Action</th><th>Direction</th><th>Match</th><th>Scope</th><th>Agent</th><th>Tags</th><th>Updated</th><th>By</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for r in page.items %}
+      <tr>
+        <td class="mono clipped" title="{{ r.id }}">{{ r.id }}</td>
+        <td class="clipped" title="{{ r.name }}">{{ r.name }}</td>
+        <td><span class="status-dot {{ 'on' if r.enabled else 'off' }}"></span>{{ 'Yes' if r.enabled else 'No' }}</td>
+        <td><span class="badge severity-{{ r.severity }}">{{ r.severity }}</span></td>
+        <td><span class="badge action-{{ r.action }}">{{ r.action }}</span></td>
+        <td>{{ r.direction }}</td>
+        <td>{{ r.match_type }}</td>
+        <td>{{ r.scope }}</td>
+        <td class="clipped">{{ r.agent_id or "-" }}</td>
+        <td class="clipped" title="{{ r.tags }}">{{ r.tags }}</td>
+        <td class="date-cell">{{ r.updated_at }}</td>
+        <td>{{ r.updated_by }}</td>
+        <td class="actions">
+          <a class="btn btn-outline-light btn-xs" href="{{ url_for('rule_view', rule_id=r.id) }}">View</a>
+          <a class="btn btn-outline-light btn-xs" href="{{ url_for('rule_edit', rule_id=r.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('rule_action', rule_id=r.id, action='clone') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-info btn-xs">Clone</button></form>
+          <form method="post" action="{{ url_for('rule_action', rule_id=r.id, action='disable' if r.enabled else 'enable') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-warning btn-xs" data-confirm>{{ 'Disable' if r.enabled else 'Enable' }}</button></form>
+          <form method="post" action="{{ url_for('rule_action', rule_id=r.id, action='delete') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger btn-xs" data-confirm>Delete</button></form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "_pagination.html" %}
+{% endblock %}

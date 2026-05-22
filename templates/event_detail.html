@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block content %}
+<h1>Event {{ event.id }}</h1>
+<dl class="row detail-list">
+{% for k in ["id","timestamp","request_id","agent_id","source_ip","severity","action","rule_id","direction","host","method","status_code","content_type","redacted_url","body_sha256_16"] %}
+<dt class="col-sm-3">{{ k }}</dt><dd class="col-sm-9">{{ event|attr(k) }}</dd>
+{% endfor %}
+<dt class="col-sm-3">Details</dt><dd class="col-sm-9"><pre>{{ event.details_json }}</pre></dd>
+</dl>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block content %}
+<h1>Events</h1>
+<form class="row g-2 mb-3"><input class="form-control col" name="agent_id" placeholder="Agent"><input class="form-control col" name="host" placeholder="Host"><input class="form-control col" name="rule_id" placeholder="Rule"><button class="btn btn-primary col-auto">Filter</button></form>
+{% include "_events_table.html" %}{% include "_pagination.html" %}
+{% endblock %}

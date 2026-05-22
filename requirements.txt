@@ -1,0 +1,15 @@
+mitmproxy
+Flask
+Flask-WTF
+Flask-Limiter
+Flask-Login
+Flask-SQLAlchemy
+Werkzeug
+PyYAML
+gunicorn
+python-dotenv
+email-validator
+pyotp
+qrcode
+psycopg[binary]
+pytest

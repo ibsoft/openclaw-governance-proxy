@@ -1,0 +1,8 @@
+proxy:
+  host: 127.0.0.1
+  port: 8888
+ui:
+  host: 127.0.0.1
+  port: 8899
+database: data/governance.db
+note: "Example only. Live configuration is stored in SQLite."

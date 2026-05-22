@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Identity</p>
+    <h1>Agents</h1>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('agent_new') }}"><i class="fa-solid fa-plus"></i> Create Agent</a>
+</div>
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table table-sm ops-table">
+      <thead><tr><th>Agent ID</th><th>Name</th><th>Enabled</th><th>Policy</th><th>Source IPs</th><th>Last Seen</th><th>Created</th><th>Updated</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for a in page.items %}
+      <tr>
+        <td class="mono clipped" title="{{ a.id }}">{{ a.id }}</td>
+        <td class="clipped">{{ a.name }}</td>
+        <td><span class="status-dot {{ 'on' if a.enabled else 'off' }}"></span>{{ 'Yes' if a.enabled else 'No' }}</td>
+        <td><span class="badge policy-badge">{{ a.policy_mode }}</span></td>
+        <td class="clipped" title="{{ a.allowed_source_ips }}">{{ a.allowed_source_ips }}</td>
+        <td class="date-cell">{{ a.last_seen_at or "-" }}</td>
+        <td class="date-cell">{{ a.created_at }}</td>
+        <td class="date-cell">{{ a.updated_at }}</td>
+        <td class="actions">
+          <a class="btn btn-outline-light btn-xs" href="{{ url_for('agent_view', agent_id=a.id) }}">View</a>
+          <a class="btn btn-outline-light btn-xs" href="{{ url_for('agent_edit', agent_id=a.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('agent_action', agent_id=a.id, action='disable' if a.enabled else 'enable') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-warning btn-xs" data-confirm>{{ 'Disable' if a.enabled else 'Enable' }}</button></form>
+          <form method="post" action="{{ url_for('agent_action', agent_id=a.id, action='rotate-token') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-info btn-xs" data-confirm>Rotate</button></form>
+          <a class="btn btn-outline-light btn-xs" href="{{ url_for('agent_events', agent_id=a.id) }}">Events</a>
+          <form method="post" action="{{ url_for('agent_action', agent_id=a.id, action='delete') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger btn-xs" data-confirm>Delete</button></form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "_pagination.html" %}
+{% endblock %}

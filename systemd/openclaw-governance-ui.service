@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenClaw Governance UI
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/openclaw-governance-proxy
+EnvironmentFile=/opt/openclaw-governance-proxy/.env
+ExecStart=/opt/openclaw-governance-proxy/.venv/bin/gunicorn --bind 127.0.0.1:8899 --workers 2 --threads 4 --access-logfile - --error-logfile - --capture-output --log-level info openclaw_governance_proxy.app:app
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ReadWritePaths=/opt/openclaw-governance-proxy/logs /opt/openclaw-governance-proxy/data /opt/openclaw-governance-proxy/config
+
+[Install]
+WantedBy=multi-user.target

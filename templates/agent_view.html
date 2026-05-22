@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block content %}<h1>{{ agent.id }}</h1>{% if token %}<div class="alert alert-warning"><strong>Agent token, shown once:</strong><code>{{ token }}</code></div>{% endif %}<dl class="row"><dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ agent.name }}</dd><dt class="col-sm-3">Enabled</dt><dd class="col-sm-9">{{ agent.enabled }}</dd><dt class="col-sm-3">Policy Mode</dt><dd class="col-sm-9">{{ agent.policy_mode }}</dd><dt class="col-sm-3">Tags</dt><dd class="col-sm-9">{{ tags|join(", ") }}</dd><dt class="col-sm-3">Token Status</dt><dd class="col-sm-9">Configured, value not retrievable</dd></dl><h2>OpenClaw setup</h2><pre>export HTTP_PROXY=http://127.0.0.1:8888
+export HTTPS_PROXY=http://127.0.0.1:8888
+export NO_PROXY=127.0.0.1,localhost
+export OPENCLAW_AGENT_ID="{{ agent.id }}"
+export OPENCLAW_AGENT_TOKEN="{{ token or '<agent_token>' }}"</pre>{% endblock %}

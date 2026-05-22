@@ -1,0 +1,175 @@
+rules:
+  - id: prompt_injection_ignore_previous
+    name: Prompt injection ignore previous instructions
+    description: Detects common instruction override attempts.
+    enabled: true
+    severity: critical
+    action: block
+    direction: both
+    match_type: regex
+    scope: global
+    patterns:
+      - (?i)ignore\s+(all\s+)?previous\s+instructions
+      - (?i)disregard\s+(all\s+)?previous\s+instructions
+      - (?i)forget\s+(all\s+)?previous\s+instructions
+      - (?i)ignore(?:\s|%20|%2520|\+)+(all(?:\s|%20|%2520|\+)+)?previous(?:\s|%20|%2520|\+)+instructions
+      - (?i)disregard(?:\s|%20|%2520|\+)+(all(?:\s|%20|%2520|\+)+)?previous(?:\s|%20|%2520|\+)+instructions
+      - (?i)forget(?:\s|%20|%2520|\+)+(all(?:\s|%20|%2520|\+)+)?previous(?:\s|%20|%2520|\+)+instructions
+      - (?i)you\s+are\s+now\s+in\s+developer\s+mode
+      - (?i)act\s+as\s+(dan|developer\s+mode|unrestricted)
+    domains: []
+    content_types: []
+    tags: [prompt-injection]
+  - id: system_prompt_extraction
+    name: System prompt extraction
+    description: Blocks attempts to reveal hidden instructions.
+    enabled: true
+    severity: critical
+    action: block
+    direction: both
+    match_type: regex
+    scope: global
+    patterns:
+      - (?i)reveal\s+(the\s+)?system\s+prompt
+      - (?i)show\s+(me\s+)?(your\s+)?hidden\s+instructions
+      - (?i)print\s+(your\s+)?system\s+message
+      - (?i)developer\s+message
+      - (?i)chain\s+of\s+thought
+      - (?i)private\s+reasoning
+    domains: []
+    content_types: []
+    tags: [prompt-injection]
+  - id: policy_bypass_jailbreak
+    name: Policy bypass and jailbreak
+    description: Detects jailbreak and guardrail bypass language.
+    enabled: true
+    severity: critical
+    action: block
+    direction: both
+    match_type: regex
+    scope: global
+    patterns:
+      - (?i)bypass\s+(policy|rules|safety|guardrails)
+      - (?i)ignore\s+(safety\s+)?guardrails
+      - (?i)ignore\s+safety\s+(rules|policy)
+      - (?i)jailbreak
+      - (?i)role\s*override
+      - (?i)tool-use\s+manipulation
+    domains: []
+    content_types: []
+    tags: [jailbreak]
+  - id: credential_exfiltration
+    name: Credential exfiltration
+    description: Blocks attempts to steal or send local secrets.
+    enabled: true
+    severity: critical
+    action: block
+    direction: both
+    match_type: regex
+    scope: global
+    patterns:
+      - (?i)exfiltrate
+      - (?i)steal\s+(secrets|credentials|tokens|api\s+keys)
+      - (?i)send\s+(the\s+)?contents\s+of\s+(/[^\s]+)
+      - (?i)read\s+(/etc/passwd|/etc/shadow|\.env|id_rsa|id_ed25519)
+    domains: []
+    content_types: []
+    tags: [secrets]
+  - id: secret_detector
+    name: Secret detector
+    description: Monitors credential-like content. Specific high-confidence secret rules handle blocking.
+    enabled: true
+    severity: critical
+    action: monitor
+    direction: both
+    match_type: secret_detector
+    scope: global
+    patterns: []
+    domains: []
+    content_types: []
+    tags: [secrets]
+  - id: private_key_leakage
+    name: Private key leakage
+    description: Blocks private key material.
+    enabled: true
+    severity: critical
+    action: block
+    direction: both
+    match_type: regex
+    scope: global
+    patterns:
+      - -----BEGIN\s+(RSA|OPENSSH|PRIVATE)\s+KEY-----
+      - (?i)\bapi[_-]?key\b\s*[:=]\s*['"]?[A-Za-z0-9._\-]{16,}
+      - (?i)bearer\s+[a-zA-Z0-9._\-]{20,}
+      - (?i)\bpassword\b\s*[:=]\s*['"]?[^'"\s,;]{8,}
+      - (?i)\bsecret\b\s*[:=]\s*['"]?[^'"\s,;]{8,}
+      - (?i)\btoken\b\s*[:=]\s*['"]?[A-Za-z0-9._\-]{16,}
+      - (?i)aws_access_key_id\s*[:=]\s*['"]?[A-Z0-9]{16,}
+      - (?i)aws_secret_access_key\s*[:=]\s*['"]?[A-Za-z0-9/+=]{32,}
+      - (?i)github_pat_[A-Za-z0-9_]+
+      - (?i)ghp_[A-Za-z0-9]{20,}
+      - (?i)xox[baprs]-[A-Za-z0-9-]+
+      - (?i)sk-[A-Za-z0-9]{20,}
+      - (?i)postgresql://[^\s]+
+      - (?i)mysql://[^\s]+
+      - (?i)mongodb(\+srv)?://[^\s]+
+    domains: []
+    content_types: []
+    tags: [secrets]
+  - id: suspicious_exfil_destinations
+    name: Suspicious exfiltration destinations
+    description: Blocks paste, webhook, and tunnel destinations.
+    enabled: true
+    severity: high
+    action: block
+    direction: request
+    match_type: domain
+    scope: global
+    patterns: []
+    domains:
+      - pastebin.com
+      - hastebin.com
+      - webhook.site
+      - requestbin.com
+      - requestbin.net
+      - ngrok-free.app
+      - localtunnel.me
+      - interact.sh
+      - oastify.com
+    content_types: []
+    tags: [exfiltration]
+  - id: cloud_metadata_protection
+    name: Cloud metadata protection
+    description: Blocks direct access to common cloud metadata endpoints.
+    enabled: true
+    severity: critical
+    action: block
+    direction: request
+    match_type: domain
+    scope: global
+    patterns: []
+    domains:
+      - 169.254.169.254
+      - metadata.google.internal
+      - 100.100.100.200
+      - 169.254.170.2
+      - 169.254.169.123
+    content_types: []
+    tags: [ssrf, metadata]
+  - id: dangerous_autonomy
+    name: Dangerous autonomous actions
+    description: Warns on high-risk autonomous and scanning instructions.
+    enabled: true
+    severity: medium
+    action: warn
+    direction: both
+    match_type: regex
+    scope: global
+    patterns:
+      - (?i)unauthorized\s+scanning
+      - (?i)deploy\s+malware
+      - (?i)disable\s+(logging|audit|security)
+      - (?i)run\s+without\s+approval
+    domains: []
+    content_types: []
+    tags: [autonomy]

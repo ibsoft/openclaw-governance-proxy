@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block content %}<h1>OpenClaw Routing Instructions</h1><pre>export HTTP_PROXY=http://127.0.0.1:8888
+export HTTPS_PROXY=http://127.0.0.1:8888
+export NO_PROXY=127.0.0.1,localhost
+export OPENCLAW_AGENT_ID="&lt;agent_id&gt;"
+export OPENCLAW_AGENT_TOKEN="&lt;agent_token&gt;"
+openclaw gateway start</pre><h2>systemd user service</h2><pre>systemctl --user edit openclaw-gateway
+[Service]
+Environment="HTTP_PROXY=http://127.0.0.1:8888"
+Environment="HTTPS_PROXY=http://127.0.0.1:8888"
+Environment="NO_PROXY=127.0.0.1,localhost"
+Environment="OPENCLAW_AGENT_ID=&lt;agent_id&gt;"
+Environment="OPENCLAW_AGENT_TOKEN=&lt;agent_token&gt;"</pre><p>If custom headers are supported, inject X-OpenClaw-Agent-ID and X-OpenClaw-Agent-Token. Source-IP mapping is a fallback.</p>{% endblock %}

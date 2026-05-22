@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block content %}<h1>{{ rule.id }}</h1><p>{{ rule.description }}</p><pre>{{ rule.notes }}</pre><a class="btn btn-primary" href="{{ url_for('rule_edit', rule_id=rule.id) }}">Edit</a>{% endblock %}
