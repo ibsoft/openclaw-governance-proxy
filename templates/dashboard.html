@@ -1,13 +1,35 @@
 {% extends "base.html" %}{% block content %}
-<h1>Dashboard</h1>
-<div class="grid-cards">
-{% for label,key in [("Total requests","total_requests"),("Blocked","blocked_events"),("Redacted","redacted_events"),("Warnings","warnings"),("Rules enabled","rules_enabled"),("Rules disabled","rules_disabled"),("Active agents","active_agents"),("Disabled agents","disabled_agents"),("Unknown agents","unknown_agent_events")] %}
-  <div class="metric"><span>{{ label }}</span><strong>{{ stats[key] }}</strong></div>
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Control plane</p>
+    <h1>Dashboard</h1>
+  </div>
+</div>
+{% set cards = [
+  {"label":"Total requests","key":"total_requests","icon":"fa-network-wired","tone":"blue"},
+  {"label":"Blocked","key":"blocked_events","icon":"fa-ban","tone":"red"},
+  {"label":"Redacted","key":"redacted_events","icon":"fa-eraser","tone":"orange"},
+  {"label":"Warnings","key":"warnings","icon":"fa-triangle-exclamation","tone":"yellow"},
+  {"label":"Rules enabled","key":"rules_enabled","icon":"fa-shield-halved","tone":"green"},
+  {"label":"Rules disabled","key":"rules_disabled","icon":"fa-shield","tone":"slate"},
+  {"label":"Active agents","key":"active_agents","icon":"fa-robot","tone":"cyan"},
+  {"label":"Disabled agents","key":"disabled_agents","icon":"fa-user-slash","tone":"purple"},
+  {"label":"Unknown agents","key":"unknown_agent_events","icon":"fa-user-secret","tone":"pink"}
+] %}
+<div class="grid-cards dashboard-cards">
+{% for card in cards %}
+  <div class="metric metric-{{ card.tone }}">
+    <div class="metric-icon"><i class="fa-solid {{ card.icon }}"></i></div>
+    <div class="metric-body">
+      <span>{{ card.label }}</span>
+      <strong>{{ stats[card.key] }}</strong>
+    </div>
+  </div>
 {% endfor %}
 </div>
 <div class="d-flex gap-2 my-3">
-  <form method="post" action="{{ url_for('rules_reload') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-warning" data-confirm>Reload Rules</button></form>
-  <a class="btn btn-outline-info" href="{{ url_for('openclaw_setup') }}">OpenClaw proxy variables</a>
+  <form method="post" action="{{ url_for('rules_reload') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-warning" data-confirm><i class="fa-solid fa-rotate"></i> Reload Rules</button></form>
+  <a class="btn btn-outline-info" href="{{ url_for('openclaw_setup') }}"><i class="fa-solid fa-route"></i> OpenClaw proxy variables</a>
 </div>
 <h2>Recent Critical Events</h2>
 {% include "_events_table.html" with context %}
