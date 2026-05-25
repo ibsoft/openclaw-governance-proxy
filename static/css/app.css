@@ -75,6 +75,13 @@ body {
 }
 
 .sidebar a:hover { background: rgba(59, 130, 246, .14); color: white; }
+.sidebar a.active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, .24), rgba(6, 182, 212, .14));
+  color: #fff;
+  box-shadow: inset 3px 0 0 var(--cyan);
+}
+.brand span:last-child { display: grid; line-height: 1.05; }
+.brand small { color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .sidebar-footer { padding: .8rem .2rem .2rem; }
 
 .content {
@@ -103,6 +110,18 @@ footer {
   color: var(--muted);
   margin-top: auto;
   flex-shrink: 0;
+  display: flex;
+  gap: .8rem;
+  flex-wrap: wrap;
+}
+footer span:not(:last-child)::after {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-left: .8rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, .55);
 }
 h1 { font-size: clamp(2rem, 3vw, 2.8rem); line-height: 1.05; margin: 0; }
 h2 { font-size: 1.2rem; margin-top: 1.5rem; }
@@ -216,18 +235,92 @@ h2 { font-size: 1.2rem; margin-top: 1.5rem; }
 
 .grid-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 1rem;
 }
 .metric {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .95rem;
+  min-height: 112px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 1rem;
   box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
 }
+.metric::after {
+  content: "";
+  position: absolute;
+  inset: auto -24px -34px auto;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: var(--metric-glow, rgba(59, 130, 246, .14));
+  filter: blur(4px);
+  opacity: .75;
+}
+.metric:hover {
+  transform: translateY(-2px);
+  border-color: rgba(191, 219, 254, .28);
+  background: rgba(20, 31, 52, .95);
+}
+.metric-icon {
+  position: relative;
+  z-index: 1;
+  width: 46px;
+  height: 46px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 46px;
+  border-radius: 8px;
+  background: var(--metric-bg, rgba(59, 130, 246, .16));
+  color: var(--metric-color, #bfdbfe);
+  border: 1px solid var(--metric-border, rgba(59, 130, 246, .28));
+  box-shadow: 0 14px 28px rgba(0, 0, 0, .22);
+  font-size: 1.15rem;
+}
+.metric-body { position: relative; z-index: 1; min-width: 0; }
 .metric span { color: var(--muted); display: block; }
-.metric strong { font-size: 2rem; }
+.metric strong { display: block; font-size: 2.05rem; line-height: 1.05; letter-spacing: .01em; }
+.metric-blue { --metric-bg: rgba(59,130,246,.18); --metric-color: #bfdbfe; --metric-border: rgba(59,130,246,.38); --metric-glow: rgba(59,130,246,.18); }
+.metric-red { --metric-bg: rgba(239,68,68,.18); --metric-color: #fecaca; --metric-border: rgba(239,68,68,.4); --metric-glow: rgba(239,68,68,.16); }
+.metric-orange { --metric-bg: rgba(249,115,22,.18); --metric-color: #fed7aa; --metric-border: rgba(249,115,22,.36); --metric-glow: rgba(249,115,22,.15); }
+.metric-yellow { --metric-bg: rgba(245,158,11,.18); --metric-color: #fde68a; --metric-border: rgba(245,158,11,.36); --metric-glow: rgba(245,158,11,.14); }
+.metric-green { --metric-bg: rgba(34,197,94,.18); --metric-color: #bbf7d0; --metric-border: rgba(34,197,94,.36); --metric-glow: rgba(34,197,94,.15); }
+.metric-slate { --metric-bg: rgba(148,163,184,.16); --metric-color: #e2e8f0; --metric-border: rgba(148,163,184,.3); --metric-glow: rgba(148,163,184,.12); }
+.metric-cyan { --metric-bg: rgba(6,182,212,.18); --metric-color: #a5f3fc; --metric-border: rgba(6,182,212,.36); --metric-glow: rgba(6,182,212,.15); }
+.metric-purple { --metric-bg: rgba(139,92,246,.18); --metric-color: #ddd6fe; --metric-border: rgba(139,92,246,.36); --metric-glow: rgba(139,92,246,.15); }
+.metric-pink { --metric-bg: rgba(236,72,153,.18); --metric-color: #fbcfe8; --metric-border: rgba(236,72,153,.36); --metric-glow: rgba(236,72,153,.15); }
+
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  flex-wrap: wrap;
+}
+.status-pill,
+.host-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-height: 30px;
+  padding: .28rem .62rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, .72);
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+.status-pill.policy {
+  color: #a5f3fc;
+  border-color: rgba(6, 182, 212, .32);
+  background: rgba(6, 182, 212, .1);
+}
 
 .login-shell {
   width: min(1120px, 100%);

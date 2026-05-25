@@ -1,0 +1,1616 @@
+version: '1.0'
+description: Extended professional AI chat protection rules for OpenClaw Governance Proxy
+rules:
+- id: cloud_metadata_protection
+  name: Cloud metadata protection
+  description: Blocks direct access to common cloud metadata endpoints.
+  enabled: true
+  severity: critical
+  action: block
+  direction: request
+  match_type: domain
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns: []
+  domains:
+  - 169.254.169.254
+  - metadata.google.internal
+  - 100.100.100.200
+  - 169.254.170.2
+  - 169.254.169.123
+  content_types: []
+  tags:
+  - ssrf
+  - metadata
+  notes: ''
+- id: credential_exfiltration
+  name: Credential exfiltration
+  description: Blocks attempts to steal or send local secrets.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)exfiltrate
+  - (?i)steal\s+(secrets|credentials|tokens|api\s+keys)
+  - (?i)send\s+(the\s+)?contents\s+of\s+(/[^\s]+)
+  - (?i)read\s+(/etc/passwd|/etc/shadow|\.env|id_rsa|id_ed25519)
+  domains: []
+  content_types: []
+  tags:
+  - secrets
+  notes: ''
+- id: dangerous_autonomy
+  name: Dangerous autonomous actions
+  description: Warns on high-risk autonomous and scanning instructions.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)unauthorized\s+scanning
+  - (?i)deploy\s+malware
+  - (?i)disable\s+(logging|audit|security)
+  - (?i)run\s+without\s+approval
+  domains: []
+  content_types: []
+  tags:
+  - autonomy
+  notes: ''
+- id: policy_bypass_jailbreak
+  name: Policy bypass and jailbreak
+  description: Detects jailbreak and guardrail bypass language.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)bypass\s+(policy|rules|safety|guardrails)
+  - (?i)jailbreak
+  - (?i)role\s*override
+  - (?i)tool-use\s+manipulation
+  - (?i)ignore\s+(safety\s+)?guardrails
+  - (?i)ignore\s+safety\s+(rules|policy)
+  domains: []
+  content_types: []
+  tags:
+  - jailbreak
+  notes: ''
+- id: private_key_leakage
+  name: Private key leakage
+  description: Blocks private key material.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - '-----BEGIN\s+(RSA|OPENSSH|PRIVATE)\s+KEY-----'
+  - (?i)\bapi[_-]?key\b\s*[:=]\s*['\"]?[A-Za-z0-9._\-]{16,}
+  - (?i)bearer\s+[a-zA-Z0-9._\-]{20,}
+  - (?i)\bpassword\b\s*[:=]\s*['\"]?[^'\"\s,;]{8,}
+  - (?i)\bsecret\b\s*[:=]\s*['\"]?[^'\"\s,;]{8,}
+  - (?i)\btoken\b\s*[:=]\s*['\"]?[A-Za-z0-9._\-]{16,}
+  - (?i)aws_access_key_id\s*[:=]\s*['\"]?[A-Z0-9]{16,}
+  - (?i)aws_secret_access_key\s*[:=]\s*['\"]?[A-Za-z0-9/+=]{32,}
+  - (?i)github_pat_[A-Za-z0-9_]+
+  - (?i)ghp_[A-Za-z0-9]{20,}
+  - (?i)xox[baprs]-[A-Za-z0-9-]+
+  - (?i)sk-[A-Za-z0-9]{20,}
+  - (?i)postgresql://[^\s]+
+  - (?i)mysql://[^\s]+
+  - (?i)mongodb(\+srv)?://[^\s]+
+  domains: []
+  content_types: []
+  tags:
+  - secrets
+  notes: ''
+- id: prompt_injection_ignore_previous
+  name: Prompt injection ignore previous instructions
+  description: Detects common instruction override attempts.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)ignore\s+(all\s+)?previous\s+instructions
+  - (?i)disregard\s+(all\s+)?previous\s+instructions
+  - (?i)forget\s+(all\s+)?previous\s+instructions
+  - (?i)you\s+are\s+now\s+in\s+developer\s+mode
+  - (?i)act\s+as\s+(dan|developer\s+mode|unrestricted)
+  - (?i)ignore(?:\s|%20|%2520|\+)+(all(?:\s|%20|%2520|\+)+)?previous(?:\s|%20|%2520|\+)+instructions
+  - (?i)disregard(?:\s|%20|%2520|\+)+(all(?:\s|%20|%2520|\+)+)?previous(?:\s|%20|%2520|\+)+instructions
+  - (?i)forget(?:\s|%20|%2520|\+)+(all(?:\s|%20|%2520|\+)+)?previous(?:\s|%20|%2520|\+)+instructions
+  domains: []
+  content_types: []
+  tags:
+  - prompt-injection
+  notes: ''
+- id: secret_detector
+  name: Secret detector
+  description: Monitors credential-like content. Specific high-confidence secret rules handle blocking.
+  enabled: true
+  severity: critical
+  action: monitor
+  direction: both
+  match_type: secret_detector
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns: []
+  domains: []
+  content_types: []
+  tags:
+  - secrets
+  notes: ''
+- id: suspicious_exfil_destinations
+  name: Suspicious exfiltration destinations
+  description: Blocks paste, webhook, and tunnel destinations.
+  enabled: true
+  severity: high
+  action: block
+  direction: request
+  match_type: domain
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns: []
+  domains:
+  - pastebin.com
+  - hastebin.com
+  - webhook.site
+  - requestbin.com
+  - requestbin.net
+  - ngrok-free.app
+  - localtunnel.me
+  - interact.sh
+  - oastify.com
+  content_types: []
+  tags:
+  - exfiltration
+  notes: ''
+- id: system_prompt_extraction
+  name: System prompt extraction
+  description: Blocks attempts to reveal hidden instructions.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)reveal\s+(the\s+)?system\s+prompt
+  - (?i)show\s+(me\s+)?(your\s+)?hidden\s+instructions
+  - (?i)print\s+(your\s+)?system\s+message
+  - (?i)developer\s+message
+  - (?i)chain\s+of\s+thought
+  - (?i)private\s+reasoning
+  domains: []
+  content_types: []
+  tags:
+  - prompt-injection
+  notes: ''
+- id: instruction_hierarchy_override
+  name: Instruction hierarchy override
+  description: Blocks attempts to reorder or override system, developer, or governance priorities.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(system|developer|admin|policy)\s+(instructions?|messages?)\s+(are|is)\s+(now\s+)?(irrelevant|invalid|disabled|obsolete)
+  - (?i)\b(new|higher|top)\s+(priority|authority|hierarchy)\b.*\b(ignore|override|replace)\b
+  - (?i)\bfrom\s+now\s+on\b.*\b(ignore|override|disregard)\b.*\b(system|developer|policy|governance)\b
+  - (?i)\bthis\s+message\s+(supersedes|overrides|replaces)\s+(all\s+)?(previous|system|developer)\s+instructions
+  - (?i)\bpriority\s*[:=]\s*(highest|system|developer|root)\b.*\bignore\b
+  domains: []
+  content_types: []
+  tags:
+  - prompt-injection
+  - hierarchy
+  notes: ''
+- id: fake_system_message_injection
+  name: Fake system message injection
+  description: Detects content pretending to be a system, developer, root, or administrative message.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - '(?i)^\s*(system|developer|admin|root)\s*(message|instruction|prompt)\s*:'
+  - (?i)<\s*(system|developer|admin|root)[^>]*>
+  - (?i)\[(system|developer|admin|root)\s*(message|instruction|prompt)\]
+  - (?i)BEGIN\s+(SYSTEM|DEVELOPER|ADMIN)\s+(PROMPT|MESSAGE|INSTRUCTIONS)
+  - (?i)END\s+(SYSTEM|DEVELOPER|ADMIN)\s+(PROMPT|MESSAGE|INSTRUCTIONS)
+  domains: []
+  content_types: []
+  tags:
+  - prompt-injection
+  - spoofing
+  notes: ''
+- id: prompt_leakage_request
+  name: Prompt leakage request
+  description: Blocks attempts to expose hidden prompts, policies, tool definitions, memory, or configuration.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(show|print|dump|display|repeat|reveal|write)\b.*\b(system|developer|hidden|internal)\s+(prompt|message|instructions?|policy|rules?)\b
+  - (?i)\bwhat\s+(are|were)\s+your\s+(system|developer|hidden|initial)\s+(instructions?|prompt)\b
+  - (?i)\bverbatim\b.*\b(system|developer|hidden|internal)\b
+  - (?i)\btool\s+(schema|definitions?|instructions?|manifest)\b
+  - (?i)\b(memory|scratchpad|chain\s+of\s+thought|private\s+reasoning)\b.*\b(show|print|reveal|dump)\b
+  domains: []
+  content_types: []
+  tags:
+  - prompt-leakage
+  - data-protection
+  notes: ''
+- id: chain_of_thought_extraction
+  name: Chain-of-thought extraction
+  description: Blocks direct requests for hidden reasoning, scratchpad, or internal deliberation.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bchain[-\s]?of[-\s]?thought\b
+  - (?i)\bshow\s+(your\s+)?(reasoning|scratchpad|hidden\s+thoughts|internal\s+monologue)\b
+  - (?i)\bthink\s+out\s+loud\b.*\b(private|hidden|complete|verbatim)\b
+  - (?i)\breveal\s+(your\s+)?(analysis|private\s+analysis|deliberation)\b
+  - (?i)\bdo\s+not\s+summarize\b.*\bshow\s+all\s+reasoning\b
+  domains: []
+  content_types: []
+  tags:
+  - cot
+  - privacy
+  notes: ''
+- id: roleplay_jailbreak
+  name: Roleplay jailbreak
+  description: Detects roleplay attempts designed to bypass safety or governance controls.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bpretend\s+(you\s+are|to\s+be)\b.*\b(unrestricted|uncensored|jailbroken|no\s+rules)\b
+  - (?i)\broleplay\s+as\b.*\b(hacker|malware|criminal|unfiltered|unrestricted)\b
+  - (?i)\bDAN\b|\bdo\s+anything\s+now\b
+  - (?i)\bdeveloper\s+mode\b.*\b(enabled|on|active)\b
+  - (?i)\bno\s+(ethical|legal|safety|policy)\s+limits\b
+  domains: []
+  content_types: []
+  tags:
+  - jailbreak
+  - roleplay
+  notes: ''
+- id: obedience_coercion
+  name: Coercive obedience instruction
+  description: Detects coercive language that tries to force the model or agent to comply without checks.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\byou\s+must\s+comply\b
+  - (?i)\bdo\s+not\s+refuse\b
+  - (?i)\bnever\s+say\s+(no|cannot|can't|unable)\b
+  - (?i)\banswer\s+without\s+(warnings|disclaimers|limitations|policy)\b
+  - (?i)\bno\s+matter\s+what\b.*\b(comply|execute|follow)\b
+  domains: []
+  content_types: []
+  tags:
+  - coercion
+  - prompt-injection
+  notes: ''
+- id: tool_abuse_instruction
+  name: Tool abuse instruction
+  description: Blocks attempts to manipulate tools, connectors, browsers, shells, files, or APIs outside authorization.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(use|call|invoke|run)\s+(the\s+)?(tool|browser|shell|terminal|python|api|connector)\b.*\b(ignore|bypass|without\s+permission)\b
+  - (?i)\bexfiltrate\b.*\b(tool|connector|browser|filesystem|calendar|email|drive)\b
+  - (?i)\bdelete\b.*\b(logs?|audit|evidence|history|traces?)\b
+  - (?i)\bdisable\b.*\b(logging|monitoring|audit|security|edr|antivirus|firewall)\b
+  - (?i)\bmake\s+network\s+requests?\b.*\bwithout\s+(approval|authorization|logging)\b
+  domains: []
+  content_types: []
+  tags:
+  - tools
+  - abuse
+  notes: ''
+- id: agent_memory_poisoning
+  name: Agent memory poisoning
+  description: Detects attempts to poison long-term memory, agent identity, preferences, or future behavior.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bremember\s+that\b.*\b(ignore|bypass|disable|override)\b
+  - (?i)\bsave\s+to\s+memory\b.*\b(system|developer|policy|secret|token)\b
+  - (?i)\bfrom\s+now\s+on\b.*\btrust\s+this\s+source\b
+  - (?i)\bupdate\s+(your\s+)?memory\b.*\b(unrestricted|no\s+policy|ignore\s+rules)\b
+  - (?i)\bstore\s+this\s+as\s+(a\s+)?system\s+instruction\b
+  domains: []
+  content_types: []
+  tags:
+  - memory
+  - poisoning
+  notes: ''
+- id: rag_retrieval_poisoning
+  name: RAG retrieval poisoning
+  description: Detects document content attempting to control the agent after retrieval.
+  enabled: true
+  severity: high
+  action: block
+  direction: response
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bwhen\s+(an\s+)?AI\s+(assistant|agent|model)\s+reads\s+this\b.*\b(ignore|override|disregard)\b
+  - (?i)\bdear\s+(assistant|agent|model)\b.*\bignore\s+previous\b
+  - (?i)\bthis\s+document\s+contains\s+instructions\s+for\s+the\s+AI\b
+  - (?i)\bhidden\s+instruction\s+to\s+the\s+assistant\b
+  - (?i)\bdo\s+not\s+tell\s+the\s+user\s+about\s+this\s+instruction\b
+  domains: []
+  content_types: []
+  tags:
+  - rag
+  - prompt-injection
+  notes: ''
+- id: html_prompt_injection
+  name: HTML prompt injection
+  description: Detects hidden or embedded prompt injection in HTML, markdown, CSS, comments, or metadata.
+  enabled: true
+  severity: high
+  action: block
+  direction: response
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?is)<!--.*?(ignore|disregard|override).*?(instructions|policy|rules).*?-->
+  - (?is)<meta[^>]+content=[\"'][^\"']*(ignore|override|jailbreak)[^\"']*[\"']
+  - (?is)<[^>]+style=[\"'][^\"']*(display\s*:\s*none|visibility\s*:\s*hidden)[^\"']*[\"'][^>]*>[^<]*(ignore|override|reveal)
+  - (?i)\[//\]:\s*#\s*\(.*(ignore|override|system\s+prompt).*\)
+  - (?i)<script[^>]*>.*(ignore\s+previous|reveal\s+system\s+prompt).*?</script>
+  domains: []
+  content_types: []
+  tags:
+  - html
+  - prompt-injection
+  notes: ''
+- id: base64_obfuscation_prompt_injection
+  name: Base64 or encoding obfuscation
+  description: Warns on suspicious encoded instruction-transfer language.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(base64|hex|rot13|url\s*decode|unicode\s*escape)\b.*\b(decode|execute|follow|obey)\b
+  - (?i)\bdecode\s+this\b.*\bthen\s+(follow|execute|obey)\b
+  - (?i)\bhidden\s+message\s+is\s+encoded\b
+  - (?i)\bafter\s+decoding\b.*\bignore\s+previous\b
+  - (?i)\bdo\s+not\s+show\s+the\s+decoded\s+text\b.*\bexecute\b
+  domains: []
+  content_types: []
+  tags:
+  - obfuscation
+  - encoding
+  notes: ''
+- id: secret_value_patterns_general
+  name: General secret value patterns
+  description: Detects common API keys, tokens, JWTs, and credentials in chat content.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bauthorization\s*:\s*bearer\s+[A-Za-z0-9._\-]{20,}
+  - \beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\b
+  - (?i)\b(api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret)\s*[:=]\s*['\"]?[A-Za-z0-9._\-\/+=]{16,}
+  - (?i)\b(private[_-]?key|secret[_-]?key)\s*[:=]\s*['\"]?[A-Za-z0-9._\-\/+=]{16,}
+  - (?i)\b(password|passwd|pwd)\s*[:=]\s*['\"]?[^'\"\s,;]{8,}
+  domains: []
+  content_types: []
+  tags:
+  - secrets
+  - tokens
+  notes: ''
+- id: cloud_provider_keys
+  name: Cloud provider key leakage
+  description: Blocks AWS, Azure, Google Cloud, and generic cloud credential leakage.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - \bAKIA[0-9A-Z]{16}\b
+  - \bASIA[0-9A-Z]{16}\b
+  - (?i)\baws_secret_access_key\b\s*[:=]\s*['\"]?[A-Za-z0-9/+=]{40}
+  - (?i)\baws_session_token\b\s*[:=]\s*['\"]?[A-Za-z0-9/+=]{50,}
+  - (?i)\bazure[_-]?(client|tenant|subscription)[_-]?id\b\s*[:=]\s*['\"]?[0-9a-f-]{32,}
+  - (?i)\bazure[_-]?client[_-]?secret\b\s*[:=]\s*['\"]?[^'\"\s]{16,}
+  - (?i)-----BEGIN\s+PRIVATE\s+KEY-----[\s\S]{0,2000}client_email[\s\S]{0,2000}-----END\s+PRIVATE\s+KEY-----
+  domains: []
+  content_types: []
+  tags:
+  - cloud
+  - secrets
+  notes: ''
+- id: source_code_secret_leakage
+  name: Source code secret leakage
+  description: Detects secrets in source code style assignments and configuration.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(const|let|var|string|private\s+string)\s+\w*(secret|token|password|apikey|api_key)\w*\s*=\s*['\"][^'\"]{8,}['\"]
+  - (?i)\b(process\.env|os\.environ|getenv)\s*\(\s*['\"]?(SECRET|TOKEN|PASSWORD|API_KEY)
+  - (?i)\b.env\b.*\b(API_KEY|SECRET|TOKEN|PASSWORD)\b
+  - (?i)\bconnectionstring\b\s*[:=]\s*['\"][^'\"]+['\"]
+  - (?i)\bDefaultEndpointsProtocol=https;AccountName=.*;AccountKey=.*;EndpointSuffix=
+  domains: []
+  content_types: []
+  tags:
+  - source-code
+  - secrets
+  notes: ''
+- id: database_connection_leakage
+  name: Database connection leakage
+  description: Blocks database connection strings and credentials.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bpostgres(ql)?://[^:\s]+:[^@\s]+@[^/\s]+/[^\s]+
+  - (?i)\bmysql://[^:\s]+:[^@\s]+@[^/\s]+/[^\s]+
+  - (?i)\bmongodb(\+srv)?://[^:\s]+:[^@\s]+@[^/\s]+
+  - (?i)\bredis://(:[^@\s]+@)?[^/\s]+
+  - (?i)\b(server|data source)\s*=\s*[^;]+;\s*(user id|uid)\s*=\s*[^;]+;\s*(password|pwd)\s*=
+  domains: []
+  content_types: []
+  tags:
+  - database
+  - secrets
+  notes: ''
+- id: ssh_gpg_key_leakage
+  name: SSH and PGP key leakage
+  description: Blocks private SSH, PGP, and certificate key material.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - '-----BEGIN\s+OPENSSH\s+PRIVATE\s+KEY-----'
+  - '-----BEGIN\s+RSA\s+PRIVATE\s+KEY-----'
+  - '-----BEGIN\s+EC\s+PRIVATE\s+KEY-----'
+  - '-----BEGIN\s+DSA\s+PRIVATE\s+KEY-----'
+  - '-----BEGIN\s+PGP\s+PRIVATE\s+KEY\s+BLOCK-----'
+  - '-----BEGIN\s+ENCRYPTED\s+PRIVATE\s+KEY-----'
+  domains: []
+  content_types: []
+  tags:
+  - keys
+  - secrets
+  notes: ''
+- id: oauth_session_cookie_leakage
+  name: OAuth and session cookie leakage
+  description: Detects OAuth codes, session cookies, and authentication artifacts.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(code|auth_code|authorization_code)\s*[:=]\s*['\"]?[A-Za-z0-9._\-]{16,}
+  - (?i)\b(id_token|access_token|refresh_token)\s*[:=]\s*['\"]?[A-Za-z0-9._\-]{16,}
+  - (?i)\b(sessionid|session_id|sid|connect\.sid|JSESSIONID|PHPSESSID)\s*[:=]\s*[^;\s]{8,}
+  - (?i)\bset-cookie\s*:\s*[^;\n]*(session|token|auth)[^;\n]*
+  - (?i)\bcookie\s*:\s*.*(session|auth|token)=
+  domains: []
+  content_types: []
+  tags:
+  - oauth
+  - cookies
+  - secrets
+  notes: ''
+- id: pii_sensitive_data_leakage
+  name: PII sensitive data leakage
+  description: Warns on possible personal data exposure in chat traffic.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(passport|national\s+id|social\s+security|ssn|tax\s+id|vat\s+number)\b\s*[:=]?\s*[A-Z0-9\-]{6,}
+  - \b\d{3}-\d{2}-\d{4}\b
+  - \b(?:\d[ -]*?){13,19}\b
+  - (?i)\b(date\s+of\s+birth|dob)\b\s*[:=]\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}
+  - (?i)\b(home\s+address|residential\s+address)\b\s*[:=]
+  domains: []
+  content_types: []
+  tags:
+  - privacy
+  - pii
+  notes: ''
+- id: destructive_system_commands
+  name: Destructive system command instructions
+  description: Blocks instructions that could destroy data, wipe systems, or remove evidence.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\brm\s+-rf\s+/(?:\s|$)
+  - (?i)\bdd\s+if=/dev/(zero|random|urandom)\s+of=/dev/
+  - (?i)\bmkfs\.[a-z0-9]+\s+/dev/
+  - (?i)\b(shred|wipe|srm)\b.*\b(/|/home|/etc|/var|/opt)\b
+  - (?i)\bdelete\s+(all\s+)?(logs|backups|snapshots|audit\s+trails)\b
+  domains: []
+  content_types: []
+  tags:
+  - destructive
+  - system
+  notes: ''
+- id: unauthorized_network_scanning
+  name: Unauthorized network scanning
+  description: Warns or blocks instructions for scanning without explicit authorization.
+  enabled: true
+  severity: high
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bscan\s+(the\s+)?(internet|whole\s+network|public\s+ip\s+range)\b
+  - (?i)\bnmap\b.*\b(-p-|-A|-sV|-sS)\b.*\bwithout\s+(permission|authorization)\b
+  - (?i)\bmasscan\b.*\b0\.0\.0\.0/0\b
+  - (?i)\bfind\s+vulnerable\s+(hosts|servers|targets)\b
+  - (?i)\bunauthorized\s+(scan|recon|enumeration|pentest)\b
+  domains: []
+  content_types: []
+  tags:
+  - scanning
+  - authorization
+  notes: ''
+- id: malware_or_persistence_instruction
+  name: Malware or persistence instruction
+  description: Blocks malware, persistence, evasion, or unauthorized payload instructions.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(create|write|build|generate)\b.*\b(malware|ransomware|keylogger|stealer|botnet|worm)\b
+  - (?i)\b(persistence|startup\s+persistence|registry\s+run\s+key|cron\s+persistence)\b
+  - (?i)\bdisable\s+(defender|edr|antivirus|firewall|selinux|apparmor)\b
+  - (?i)\bevade\s+(detection|edr|antivirus|sandbox)\b
+  - (?i)\bcredential\s+(stealer|harvester|logger)\b
+  domains: []
+  content_types: []
+  tags:
+  - malware
+  - evasion
+  notes: ''
+- id: financial_or_fraud_abuse
+  name: Fraud or financial abuse instruction
+  description: Blocks explicit instructions for fraud, theft, or unauthorized payment abuse.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(carding|cashout|bank\s+fraud|wire\s+fraud|payment\s+fraud)\b
+  - (?i)\bsteal\s+(credit\s+cards?|bank\s+accounts?|paypal|crypto)\b
+  - (?i)\bbypass\s+(kyc|aml|payment\s+verification)\b
+  - (?i)\bclone\s+(credit|debit)\s+card\b
+  - (?i)\bunauthorized\s+(charge|transfer|withdrawal)\b
+  domains: []
+  content_types: []
+  tags:
+  - fraud
+  - abuse
+  notes: ''
+- id: sensitive_file_access
+  name: Sensitive local file access
+  description: Blocks attempts to read sensitive local files or directories.
+  enabled: true
+  severity: critical
+  action: block
+  direction: request
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(cat|less|more|type|open|read)\s+(/etc/shadow|/etc/passwd|/etc/sudoers)\b
+  - (?i)\b(cat|less|more|type|open|read)\s+.*(\.env|id_rsa|id_ed25519|known_hosts|credentials|secrets\.json)\b
+  - (?i)\b(read|dump|print)\s+(all\s+)?environment\s+variables\b
+  - (?i)\b(printenv|env)\b.*\b(SECRET|TOKEN|PASSWORD|KEY)\b
+  - (?i)\b(open|read)\s+(/root|/home/[^/\s]+/\.ssh|/var/lib|/opt/.*/secrets?)\b
+  domains: []
+  content_types: []
+  tags:
+  - filesystem
+  - secrets
+  notes: ''
+- id: cloud_metadata_ssrf_language
+  name: Cloud metadata SSRF language
+  description: Blocks SSRF-like attempts to access cloud metadata services.
+  enabled: true
+  severity: critical
+  action: block
+  direction: request
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b169\.254\.169\.254\b
+  - (?i)\bmetadata\.google\.internal\b
+  - (?i)\b100\.100\.100\.200\b
+  - (?i)\b169\.254\.170\.2\b
+  - (?i)\b/latest/meta-data\b
+  - (?i)\b/computeMetadata/v1\b
+  domains: []
+  content_types: []
+  tags:
+  - ssrf
+  - metadata
+  notes: ''
+- id: webhook_exfiltration_language
+  name: Webhook exfiltration language
+  description: Blocks attempts to send secrets or data to paste, webhook, or request capture services.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bsend\b.*\b(secret|token|password|key|credential|env)\b.*\b(webhook|pastebin|requestbin|ngrok|interact\.sh|oastify)\b
+  - (?i)\bpost\b.*\b(data|secrets|credentials)\b.*\b(webhook|callback|collector)\b
+  - (?i)\bexfiltrate\b.*\b(http|https|dns|webhook)\b
+  - (?i)\bupload\b.*\b(\.env|id_rsa|credentials|secrets)\b
+  - (?i)\bcallback\s+url\b.*\b(secret|token|credential)\b
+  domains: []
+  content_types: []
+  tags:
+  - exfiltration
+  - webhook
+  notes: ''
+- id: untrusted_url_instruction_following
+  name: Untrusted URL instruction following
+  description: Warns when a page instructs the AI to fetch another URL and follow instructions there.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: response
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bAI\b.*\bvisit\s+(this|the)\s+URL\b.*\bfollow\s+instructions\b
+  - (?i)\bassistant\b.*\bfetch\b.*\bthen\s+obey\b
+  - (?i)\bopen\s+https?://[^\s]+.*\bignore\s+previous\b
+  - (?i)\bcontinue\s+instructions\s+at\s+https?://
+  - (?i)\bthe\s+real\s+prompt\s+is\s+at\s+https?://
+  domains: []
+  content_types: []
+  tags:
+  - url
+  - prompt-injection
+  notes: ''
+- id: data_boundary_violation
+  name: Data boundary violation
+  description: Detects attempts to mix tenant, customer, or private data across contexts.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\buse\s+(another|other)\s+(tenant|customer|client|user)'?s\s+data\b
+  - (?i)\bignore\s+(tenant|workspace|customer)\s+isolation\b
+  - (?i)\bcross[-\s]?tenant\b.*\b(export|merge|share|leak)\b
+  - (?i)\bshow\s+me\s+(all\s+)?users'? private data\b
+  - (?i)\bcombine\s+data\s+from\s+all\s+(tenants|customers|clients)\b
+  domains: []
+  content_types: []
+  tags:
+  - tenant-isolation
+  - privacy
+  notes: ''
+- id: approval_bypass
+  name: Approval bypass
+  description: Blocks attempts to bypass approvals, confirmations, ROE, or authorization gates.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bwithout\s+(approval|authorization|permission|confirmation)\b
+  - (?i)\bskip\s+(approval|confirmation|authorization|roe|rules\s+of\s+engagement)\b
+  - (?i)\bpretend\s+(approval|authorization|permission)\s+was\s+granted\b
+  - (?i)\bdo\s+not\s+ask\s+for\s+(approval|confirmation|permission)\b
+  - (?i)\bapproval\s+is\s+not\s+needed\b
+  domains: []
+  content_types: []
+  tags:
+  - approval
+  - governance
+  notes: ''
+- id: audit_log_tampering
+  name: Audit and logging tampering
+  description: Blocks attempts to disable, hide, modify, or delete audit evidence.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(disable|stop|turn\s+off)\s+(audit|logging|monitoring|alerts?)\b
+  - (?i)\b(clear|delete|wipe|truncate)\s+(audit|logs?|history|events?)\b
+  - (?i)\bcover\s+(your|my|the)\s+tracks\b
+  - (?i)\bremove\s+evidence\b
+  - (?i)\bavoid\s+(logging|audit|detection|monitoring)\b
+  domains: []
+  content_types: []
+  tags:
+  - audit
+  - tampering
+  notes: ''
+- id: unsafe_code_execution_request
+  name: Unsafe code execution request
+  description: Warns on requests to execute untrusted code or commands from external content.
+  enabled: true
+  severity: high
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bdownload\s+and\s+(run|execute)\b
+  - (?i)\bcurl\s+[^|]+ \|\s*(sh|bash|python|perl|ruby)\b
+  - (?i)\bwget\s+[^|]+ \|\s*(sh|bash|python|perl|ruby)\b
+  - (?i)\beval\s*\(\s*(request|input|fetch|http)
+  - (?i)\bexecute\s+this\s+code\s+without\s+review\b
+  domains: []
+  content_types: []
+  tags:
+  - code-execution
+  - safety
+  notes: ''
+- id: model_output_social_engineering
+  name: Model output social engineering
+  description: Warns on social engineering instructions embedded in chat or web content.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bphishing\b
+  - (?i)\bconvince\s+(the\s+)?user\s+to\s+(share|enter|reveal)\s+(password|token|code|otp|mfa)\b
+  - (?i)\bask\s+for\s+(their\s+)?(password|2fa|otp|recovery\s+code)\b
+  - (?i)\bimpersonate\s+(support|admin|security\s+team|bank)\b
+  - (?i)\bsocial\s+engineering\b.*\bcredentials\b
+  domains: []
+  content_types: []
+  tags:
+  - social-engineering
+  - phishing
+  notes: ''
+- id: otp_mfa_code_leakage
+  name: OTP and MFA code leakage
+  description: Blocks one-time passwords, MFA codes, backup codes, and recovery codes.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(otp|mfa|2fa|verification\s+code|authenticator\s+code)\b\s*[:=]?\s*\d{6,8}\b
+  - (?i)\brecovery\s+code\b\s*[:=]?\s*[A-Za-z0-9\-]{8,}
+  - (?i)\bbackup\s+code\b\s*[:=]?\s*[A-Za-z0-9\-]{8,}
+  - (?i)\bone[-\s]?time\s+password\b\s*[:=]?\s*\d{6,8}\b
+  - (?i)\bSMS\s+code\b\s*[:=]?\s*\d{4,8}\b
+  domains: []
+  content_types: []
+  tags:
+  - mfa
+  - secrets
+  notes: ''
+- id: prompt_injection_multilingual
+  name: Multilingual prompt injection
+  description: Detects common instruction override attempts in Greek, Spanish, French, German, and Italian.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)αγνόησε\s+(όλες\s+)?τις\s+προηγούμενες\s+οδηγίες
+  - (?i)παράκαμψε\s+(τους\s+)?κανόνες|παράκαμψη\s+πολιτικής
+  - (?i)ignora\s+(todas\s+)?las\s+instrucciones\s+anteriores
+  - (?i)revela\s+(el\s+)?prompt\s+del\s+sistema
+  - (?i)ignore\s+(toutes\s+)?les\s+instructions\s+précédentes
+  - (?i)ignoriere\s+(alle\s+)?vorherigen\s+anweisungen
+  - (?i)ignora\s+(tutte\s+)?le\s+istruzioni\s+precedenti
+  domains: []
+  content_types: []
+  tags:
+  - multilingual
+  - prompt-injection
+  notes: ''
+- id: url_encoded_prompt_injection
+  name: URL-encoded prompt injection
+  description: Detects prompt injection attempts using URL encoding or double encoding.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)ignore(?:\s|%20|%2520|\+)+(all(?:\s|%20|%2520|\+)+)?previous(?:\s|%20|%2520|\+)+instructions
+  - (?i)reveal(?:\s|%20|%2520|\+)+(the(?:\s|%20|%2520|\+)+)?system(?:\s|%20|%2520|\+)+prompt
+  - (?i)bypass(?:\s|%20|%2520|\+)+(policy|rules|safety|guardrails)
+  - (?i)chain(?:\s|%20|%2520|\+)+of(?:\s|%20|%2520|\+)+thought
+  - (?i)developer(?:\s|%20|%2520|\+)+mode
+  domains: []
+  content_types: []
+  tags:
+  - encoding
+  - prompt-injection
+  notes: ''
+- id: unicode_obfuscation_warning
+  name: Unicode obfuscation warning
+  description: Warns on suspicious invisible Unicode control characters often used for prompt hiding.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - '[\u200B-\u200F\u202A-\u202E\u2060-\u206F]'
+  - (?i)\binvisible\s+(instruction|prompt|text)\b
+  - (?i)\bzero[-\s]?width\b.*\b(instruction|prompt|text)\b
+  - (?i)\bright[-\s]?to[-\s]?left\s+override\b
+  - (?i)\bunicode\s+control\s+characters?\b.*\bhide\b
+  domains: []
+  content_types: []
+  tags:
+  - unicode
+  - obfuscation
+  notes: ''
+- id: dangerous_browser_instruction
+  name: Dangerous browser automation instruction
+  description: Blocks instructions to use browser automation for unauthorized login, scraping, or secret extraction.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\buse\s+(browser|selenium|playwright)\b.*\bsteal|extract|dump\b
+  - (?i)\blog\s+in\s+as\s+someone\s+else\b
+  - (?i)\bbypass\s+(captcha|mfa|2fa|login|paywall)\b
+  - (?i)\bscrape\s+(private|personal|restricted|authenticated)\s+data\b
+  - (?i)\bexport\s+all\s+(contacts|messages|emails|users)\b.*\bwithout\s+permission\b
+  domains: []
+  content_types: []
+  tags:
+  - browser
+  - automation
+  notes: ''
+- id: email_connector_abuse
+  name: Email connector abuse
+  description: Blocks attempts to misuse email connectors for spam, phishing, or unauthorized forwarding.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bforward\s+all\s+emails?\b.*\b(external|attacker|unknown)\b
+  - (?i)\bsend\s+phishing\s+email\b
+  - (?i)\bmass\s+email\b.*\bwithout\s+consent\b
+  - (?i)\bexport\s+(all\s+)?(mailbox|emails|contacts)\b
+  - (?i)\bsearch\s+emails?\b.*\b(password|token|secret|invoice|bank)\b.*\bsend\b
+  domains: []
+  content_types: []
+  tags:
+  - email
+  - connector
+  notes: ''
+- id: calendar_contact_connector_abuse
+  name: Calendar and contact connector abuse
+  description: Warns on attempts to extract or misuse private contacts and calendar data.
+  enabled: true
+  severity: high
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bexport\s+(all\s+)?contacts\b
+  - (?i)\bdump\s+(calendar|contacts|address\s+book)\b
+  - (?i)\bshare\s+(my\s+)?calendar\s+with\s+everyone\b
+  - (?i)\bextract\s+(phone\s+numbers|emails|addresses)\b
+  - (?i)\bsend\s+contacts\s+to\s+https?://
+  domains: []
+  content_types: []
+  tags:
+  - privacy
+  - connector
+  notes: ''
+- id: unsafe_financial_or_legal_action
+  name: Unsafe financial or legal action
+  description: Blocks autonomous financial/legal commitments without explicit human confirmation.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(sign|accept|approve)\s+(contract|agreement|terms)\b.*\bwithout\s+(approval|review|confirmation)\b
+  - (?i)\bmake\s+(a\s+)?payment\b.*\bwithout\s+confirmation\b
+  - (?i)\btransfer\s+funds\b.*\bwithout\s+approval\b
+  - (?i)\bsubmit\s+(tax|legal|regulatory)\s+filing\b.*\bautomatically\b
+  - (?i)\bcommit\s+(the\s+)?company\b.*\bwithout\s+authorization\b
+  domains: []
+  content_types: []
+  tags:
+  - human-approval
+  - high-impact
+  notes: ''
+- id: prompt_injection_json_fields
+  name: Prompt injection inside JSON fields
+  description: Detects prompt injection language commonly embedded in JSON payloads or API responses.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)"(?:instruction|instructions|system|prompt|message)"\s*:\s*"[^"]*(ignore|override|reveal|jailbreak)[^"]*"
+  - (?i)"role"\s*:\s*"(system|developer|admin)"
+  - (?i)"content"\s*:\s*"[^"]*(ignore previous|system prompt|developer mode)[^"]*"
+  - (?i)"hidden"\s*:\s*true\s*,\s*"instruction"
+  - (?i)"follow_this_instruction"\s*:\s*true
+  domains: []
+  content_types: []
+  tags:
+  - json
+  - prompt-injection
+  notes: ''
+- id: prompt_injection_markdown
+  name: Prompt injection in markdown
+  description: Detects markdown-based hidden instructions or suspicious AI-targeted content.
+  enabled: true
+  severity: high
+  action: block
+  direction: response
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - '(?i)<!--\s*AI\s+INSTRUCTION\s*:'
+  - '(?i)\[hidden\s+instruction\]:'
+  - (?i)^\s*>\s*(ignore|override|disregard)\s+previous\s+instructions
+  - (?i)```(?:system|developer|prompt)
+  - (?i)#{1,6}\s*(system|developer|hidden)\s+(prompt|instructions)
+  domains: []
+  content_types: []
+  tags:
+  - markdown
+  - prompt-injection
+  notes: ''
+- id: unsafe_package_installation
+  name: Unsafe package installation instruction
+  description: Warns on installing untrusted packages or running install scripts without verification.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bpip\s+install\b.*\b--trusted-host\b
+  - (?i)\bnpm\s+install\b.*\b(unknown|latest|random)\b
+  - (?i)\bcurl\s+https?://[^\s]+\s*\|\s*(bash|sh)
+  - (?i)\binstall\s+this\s+package\b.*\bwithout\s+review\b
+  - (?i)\bdisable\s+signature\s+verification\b
+  domains: []
+  content_types: []
+  tags:
+  - supply-chain
+  - package
+  notes: ''
+- id: supply_chain_secret_exposure
+  name: Supply-chain secret exposure
+  description: Blocks instructions or outputs that expose CI/CD tokens or deployment secrets.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(GITHUB_TOKEN|CI_JOB_TOKEN|CI_REGISTRY_PASSWORD|NPM_TOKEN|PYPI_TOKEN)\b\s*[:=]
+  - (?i)\bdeploy[_-]?key\b\s*[:=]
+  - (?i)\bDOCKER_PASSWORD\b\s*[:=]
+  - (?i)\bKUBECONFIG\b.*\b(client-key-data|token)\b
+  - (?i)\bhelm\b.*\bset\b.*(password|token|secret)=
+  domains: []
+  content_types: []
+  tags:
+  - cicd
+  - secrets
+  notes: ''
+- id: kubernetes_secret_leakage
+  name: Kubernetes secret leakage
+  description: Blocks Kubernetes secrets, service account tokens, and kubeconfig leakage.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bkind:\s*Secret\b
+  - (?i)\bdata:\s*\n(?:\s+[A-Za-z0-9_.-]+:\s*[A-Za-z0-9+/=]+\n?)+
+  - (?i)\bservice-account-token\b
+  - '(?i)\bclient-certificate-data\b\s*:'
+  - '(?i)\bclient-key-data\b\s*:'
+  - '(?i)\bcertificate-authority-data\b\s*:'
+  domains: []
+  content_types: []
+  tags:
+  - kubernetes
+  - secrets
+  notes: ''
+- id: docker_secret_leakage
+  name: Docker secret leakage
+  description: Blocks Docker credentials and registry authentication material.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bDOCKER_AUTH_CONFIG\b\s*[:=]
+  - (?i)\b.docker/config\.json\b
+  - (?i)\"auths\"\s*:\s*\{
+  - (?i)\"auth\"\s*:\s*\"[A-Za-z0-9+/=]{16,}\"
+  - (?i)\bdocker\s+login\b.*(-p|--password)\s+\S+
+  domains: []
+  content_types: []
+  tags:
+  - docker
+  - secrets
+  notes: ''
+- id: llm_tool_schema_extraction
+  name: LLM tool schema extraction
+  description: Blocks attempts to reveal tool schemas, connectors, function definitions, or internal capabilities.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bshow\s+(all\s+)?available\s+tools\b.*\b(schema|json|definition|internal)\b
+  - (?i)\bdump\s+(tool|function)\s+(schema|definitions?)\b
+  - (?i)\breveal\s+(connector|tool|function)\s+(instructions|metadata|manifest)\b
+  - (?i)\bwhat\s+tools\s+are\s+hidden\b
+  - (?i)\bprint\s+the\s+tool\s+call\s+arguments\b.*\bsecret\b
+  domains: []
+  content_types: []
+  tags:
+  - tools
+  - prompt-leakage
+  notes: ''
+- id: agent_self_modification
+  name: Agent self-modification attempt
+  description: Blocks attempts to modify the agent's own controls, policies, identity, or security configuration.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bmodify\s+(your\s+)?(system\s+prompt|developer\s+instructions|policy|guardrails)\b
+  - (?i)\bdisable\s+(your\s+)?(governance|safety|filters|proxy|audit)\b
+  - (?i)\bchange\s+(your\s+)?identity\s+to\b
+  - (?i)\bremove\s+(all\s+)?restrictions\b
+  - (?i)\bupdate\s+agent\s+configuration\b.*\b(no\s+approval|without\s+approval)\b
+  domains: []
+  content_types: []
+  tags:
+  - agent
+  - self-modification
+  notes: ''
+- id: forbidden_action_message_integrity
+  name: Governance message tampering
+  description: Blocks attempts to forge, hide, or neutralize the forbidden-action governance message.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bignore\s+the\s+forbidden\s+action\s+message\b
+  - (?i)\bdo\s+not\s+show\s+(the\s+)?governance\s+warning\b
+  - (?i)\bremove\s+X-OpenClaw-Governance\b
+  - (?i)\bfake\s+(a\s+)?governance\s+allow\b
+  - (?i)\bpretend\s+the\s+proxy\s+allowed\s+it\b
+  domains: []
+  content_types: []
+  tags:
+  - governance
+  - integrity
+  notes: ''
+- id: high_risk_domains_extended
+  name: High-risk exfiltration domains extended
+  description: Blocks known paste, tunnel, request capture, and out-of-band interaction services.
+  enabled: true
+  severity: high
+  action: block
+  direction: request
+  match_type: domain
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns: []
+  domains:
+  - pastebin.com
+  - hastebin.com
+  - webhook.site
+  - requestbin.com
+  - requestbin.net
+  - ngrok-free.app
+  - ngrok.io
+  - localtunnel.me
+  - interact.sh
+  - oastify.com
+  - burpcollaborator.net
+  - canarytokens.com
+  - pipedream.net
+  - beeceptor.com
+  - hookbin.com
+  - ptsv2.com
+  - requestcatcher.com
+  - webhookrelay.com
+  content_types: []
+  tags:
+  - exfiltration
+  - domains
+  notes: ''
+- id: localhost_admin_interface_protection
+  name: Localhost admin interface protection
+  description: Blocks access attempts to local admin ports and loopback-only management interfaces.
+  enabled: true
+  severity: critical
+  action: block
+  direction: request
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bhttps?://(127\.0\.0\.1|localhost|0\.0\.0\.0|\[::1\])(:\d+)?/
+  - (?i)\bhttps?://10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?/
+  - (?i)\bhttps?://192\.168\.\d{1,3}\.\d{1,3}(:\d+)?/
+  - (?i)\bhttps?://172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}(:\d+)?/
+  - (?i)\b(admin|dashboard|debug|metrics|actuator|solr|kibana|grafana)\b.*\b(localhost|127\.0\.0\.1)\b
+  domains: []
+  content_types: []
+  tags:
+  - ssrf
+  - localhost
+  notes: ''
+- id: unsafe_http_method_tunneling
+  name: Unsafe HTTP method tunneling
+  description: Warns on headers or parameters used to tunnel unexpected HTTP methods.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: request
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bX-HTTP-Method-Override\b\s*:\s*(DELETE|PUT|PATCH)
+  - (?i)\b_method\s*=\s*(DELETE|PUT|PATCH)
+  - (?i)\bmethodOverride\b
+  - (?i)\btunnel\s+(DELETE|PUT|PATCH)\s+through\s+POST\b
+  - (?i)\boverride\s+HTTP\s+method\b
+  domains: []
+  content_types: []
+  tags:
+  - http
+  - method-override
+  notes: ''
+- id: prompt_injection_table_or_csv
+  name: Prompt injection in tables or CSV
+  description: Detects AI-targeted instructions hidden in CSV, spreadsheet, or table-like content.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: response
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)(^|,|\t)(ignore previous instructions|reveal system prompt|developer mode)(,|\t|$)
+  - (?i)\bspreadsheet\s+instruction\s+for\s+AI\b
+  - (?i)\bcsv\s+contains\s+hidden\s+prompt\b
+  - (?i)\bformula\s*=\s*['\"]?.*(cmd|powershell|curl|wget)
+  - (?i)=\s*(HYPERLINK|WEBSERVICE|IMPORTXML)\s*\(
+  domains: []
+  content_types: []
+  tags:
+  - csv
+  - spreadsheet
+  - prompt-injection
+  notes: ''
+- id: dangerous_powershell_bash
+  name: Dangerous shell command patterns
+  description: Blocks high-risk PowerShell, Bash, and command-line patterns.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bpowershell\b.*\b(-enc|-encodedcommand|downloadstring|iex|invoke-expression)\b
+  - (?i)\bIEX\s*\(
+  - (?i)\bbash\s+-i\s+>&\s+/dev/tcp/
+  - (?i)\bnc\s+(-e|--exec)\b
+  - (?i)\bpython\s+-c\s+['\"].*socket.*subprocess
+  domains: []
+  content_types: []
+  tags:
+  - shell
+  - malware
+  notes: ''
+- id: ai_chat_data_loss_prevention
+  name: AI chat DLP general
+  description: General DLP rule for chat messages containing confidential markers.
+  enabled: true
+  severity: high
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\b(confidential|strictly confidential|internal use only|do not distribute)\b
+  - (?i)\bNDA\b.*\bprotected\b
+  - (?i)\bcustomer\s+confidential\b
+  - (?i)\bproprietary\s+information\b
+  - (?i)\btrade\s+secret\b
+  domains: []
+  content_types: []
+  tags:
+  - dlp
+  - confidential
+  notes: ''
+- id: customer_data_exfiltration
+  name: Customer data exfiltration
+  description: Blocks requests to export or send customer records outside approved systems.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bexport\s+(all\s+)?customer\s+(data|records|database)\b
+  - (?i)\bsend\s+(customer|client)\s+(data|records|list)\s+to\s+https?://
+  - (?i)\bdump\s+(the\s+)?(crm|customer|client)\s+database\b
+  - (?i)\bshare\s+(all\s+)?customer\s+emails\b
+  - (?i)\bextract\s+(customer|client)\s+(phone|email|address|vat)\b
+  domains: []
+  content_types: []
+  tags:
+  - customer-data
+  - dlp
+  notes: ''
+- id: unsafe_agent_autonomy_time
+  name: Unsafe unattended autonomy
+  description: Warns on unattended autonomous operation without boundaries.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\brun\s+(forever|indefinitely|continuously)\b.*\bwithout\s+(review|approval|limits)\b
+  - (?i)\bkeep\s+trying\s+until\s+successful\b
+  - (?i)\bdo\s+whatever\s+it\s+takes\b
+  - (?i)\bno\s+human\s+(approval|review|oversight)\b
+  - (?i)\bautonomously\s+(purchase|delete|deploy|scan|attack|send)\b
+  domains: []
+  content_types: []
+  tags:
+  - autonomy
+  - human-oversight
+  notes: ''
+- id: security_assessment_boundary
+  name: Security assessment boundary
+  description: Blocks attempts to go beyond authorized scope, ROE, or target boundaries.
+  enabled: true
+  severity: critical
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\btest\s+targets?\s+outside\s+(the\s+)?scope\b
+  - (?i)\bignore\s+(the\s+)?ROE\b
+  - (?i)\battack\s+third[-\s]?party\s+systems\b
+  - (?i)\bscan\s+neighboring\s+IP\s+ranges\b
+  - (?i)\bexpand\s+scope\s+without\s+approval\b
+  domains: []
+  content_types: []
+  tags:
+  - roe
+  - assessment
+  notes: ''
+- id: prompt_injection_stop_words_evasion
+  name: Prompt injection with spacing or separators
+  description: Detects instruction override using separators, punctuation, or spacing evasion.
+  enabled: true
+  severity: high
+  action: block
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)i\s*[\W_]*g\s*[\W_]*n\s*[\W_]*o\s*[\W_]*r\s*[\W_]*e\s+previous\s+instructions
+  - (?i)r\s*[\W_]*e\s*[\W_]*v\s*[\W_]*e\s*[\W_]*a\s*[\W_]*l\s+system\s+prompt
+  - (?i)b\s*[\W_]*y\s*[\W_]*p\s*[\W_]*a\s*[\W_]*s\s*[\W_]*s\s+policy
+  - (?i)j\s*[\W_]*a\s*[\W_]*i\s*[\W_]*l\s*[\W_]*b\s*[\W_]*r\s*[\W_]*e\s*[\W_]*a\s*[\W_]*k
+  - (?i)d\s*[\W_]*e\s*[\W_]*v\s*[\W_]*e\s*[\W_]*l\s*[\W_]*o\s*[\W_]*p\s*[\W_]*e\s*[\W_]*r\s+mode
+  domains: []
+  content_types: []
+  tags:
+  - evasion
+  - prompt-injection
+  notes: ''
+- id: suspicious_instruction_delimiters
+  name: Suspicious instruction delimiters
+  description: Warns on delimiter patterns commonly used to smuggle instruction blocks.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)<<<\s*(system|developer|hidden|secret|instruction)\s*>>>
+  - (?i)---\s*(BEGIN|START)\s+(SYSTEM|DEVELOPER|HIDDEN|SECRET|INSTRUCTION)
+  - (?i)\{\{\s*(system|developer|hidden|secret|instruction)\s*\}\}
+  - (?i)###\s*(system|developer|hidden)\s+(prompt|message|instruction)
+  - (?i)\[BEGIN\s+(HIDDEN|SECRET|SYSTEM)\s+INSTRUCTIONS\]
+  domains: []
+  content_types: []
+  tags:
+  - delimiters
+  - prompt-injection
+  notes: ''
+- id: unsafe_redirect_or_callback
+  name: Unsafe redirect or callback instruction
+  description: Warns on redirect, callback, or external postback instructions that could leak data.
+  enabled: true
+  severity: medium
+  action: warn
+  direction: both
+  match_type: regex
+  scope: global
+  agent_id: null
+  policy_mode: null
+  patterns:
+  - (?i)\bredirect\s+(all\s+)?traffic\s+to\s+https?://
+  - (?i)\bcallback\s+to\s+https?://
+  - (?i)\bpostback\s+url\b
+  - (?i)\bwebhook\s+url\b.*\b(send|include)\s+(data|headers|tokens|cookies)\b
+  - (?i)\bappend\s+(token|secret|cookie|password)\s+to\s+the\s+URL\b
+  domains: []
+  content_types: []
+  tags:
+  - callback
+  - exfiltration
+  notes: ''
