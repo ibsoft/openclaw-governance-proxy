@@ -1,5 +1,8 @@
 # openclaw-governance-proxy
 
+<img width="1917" height="992" alt="image" src="https://github.com/user-attachments/assets/a750e019-9549-4a2a-9020-0a86535d8824" />
+
+
 Local-first HTTPS governance proxy for OpenClaw and other AI agents.
 
 ## What This Is
